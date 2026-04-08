@@ -3,13 +3,16 @@ import { useDrawing } from '../hooks/useDrawing';
 
 const Canvas = ({ socket, roomId, username }) => {
     const canvasRef = useRef(null);
-    const { tools, setTools, drawing, lastPoint, addStroke, getColor, redrawAll, clearCanvas } = useDrawing(canvasRef, socket, roomId);
+    const currentPathId = useRef(null);
+    const { tools, setTools, drawing, lastPoint, addStroke, getColor, redrawAll, clearCanvas, triggerUndo, triggerRedo } = useDrawing(canvasRef, socket, roomId);
     const [cursors, setCursors] = useState({});
 
     useEffect(() => {
         const handleToolAction = (e) => {
             const { action } = e.detail;
             if (action === 'clear') clearCanvas();
+            if (action === 'undo') triggerUndo();
+            if (action === 'redo') triggerRedo();
             if (action === 'save') {
                 const url = canvasRef.current.toDataURL("image/jpeg", 0.9);
                 const link = document.createElement("a");
@@ -78,6 +81,7 @@ const Canvas = ({ socket, roomId, username }) => {
     const startDraw = (e) => {
         e.preventDefault();
         drawing.current = true;
+        currentPathId.current = Date.now().toString(36) + Math.random().toString(36).substr(2);
         const { x, y } = getCanvasCoords(e);
         lastPoint.current = { x, y };
     };
@@ -90,6 +94,7 @@ const Canvas = ({ socket, roomId, username }) => {
             const color = getColor();
             const size = parseInt(tools.size, 10);
             const stroke = {
+                pathId: currentPathId.current,
                 x1: lastPoint.current.x,
                 y1: lastPoint.current.y,
                 x2: x,
@@ -97,7 +102,7 @@ const Canvas = ({ socket, roomId, username }) => {
                 color,
                 size
             };
-            addStroke(stroke);
+            addStroke(stroke, true, true);
             lastPoint.current = { x, y };
         }
     };

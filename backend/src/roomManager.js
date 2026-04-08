@@ -13,9 +13,11 @@ function addStroke(roomId, stroke){
     if(room.strokes.length > 50000) room.strokes.shift();
 }
 
-function undoStroke(roomId){
+function deletePath(roomId, pathId){
     const room = getRoom(roomId);
-    return room.strokes.pop() || null;
+    if(room){
+        room.strokes = room.strokes.filter(s => s.pathId !== pathId);
+    }
 }
 
 function addUser(roomId, socketId, username){
@@ -61,6 +63,6 @@ function getRoomUsers(roomId){
 }
 
 module.exports = {
-    getRoom, addStroke, undoStroke, addUser, removeUser, getRoomStrokes, 
+    getRoom, addStroke, deletePath, addUser, removeUser, getRoomStrokes, 
     clearRoomStrokes, removeUserFromAllRooms, getRoomUsers
 };

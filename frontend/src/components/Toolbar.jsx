@@ -57,6 +57,14 @@ const Toolbar = () => {
         window.dispatchEvent(new CustomEvent('toolAction', { detail: { action: 'save' } }));
     };
 
+    const handleUndo = () => {
+        window.dispatchEvent(new CustomEvent('toolAction', { detail: { action: 'undo' } }));
+    };
+
+    const handleRedo = () => {
+        window.dispatchEvent(new CustomEvent('toolAction', { detail: { action: 'redo' } }));
+    };
+
     return (
         <div className="toolbar">
             <input type="color" ref={colorPickerRef} onChange={handleColorChange} defaultValue="#000000" />
@@ -66,7 +74,10 @@ const Toolbar = () => {
             <button onClick={handleRainbow} style={{ background: isRainbow ? '#ffaa44' : '' }}>Rainbow</button>
             <button onClick={handleTrail} style={{ background: isTrail ? '#88ccff' : '' }}>Trail</button>
             
-            <button onClick={handleClear}>Clear</button>
+            <button onClick={handleUndo} style={{ marginLeft: 'auto' }}>Undo</button>
+            <button onClick={handleRedo}>Redo</button>
+            
+            <button onClick={handleClear} style={{ color: 'var(--coral)' }}>Clear</button>
             <button onClick={handleSave} style={{ backgroundColor: '#ffffffff', border: '1px solid #ccc' }}>Save as JPEG</button>
         </div>
     )

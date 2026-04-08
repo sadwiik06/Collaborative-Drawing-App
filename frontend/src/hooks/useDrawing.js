@@ -12,6 +12,8 @@ export const useDrawing = (canvasRef, socket, roomId) => {
     const drawing = useRef(false);
     const lastPoint = useRef(null);
     const localStrokes = useRef([]);
+    const myPathHistory = useRef([]);
+    const redoStack = useRef([]);
     const hue = useRef(0);
     const trailInterval = useRef(null);
 
@@ -42,13 +44,21 @@ export const useDrawing = (canvasRef, socket, roomId) => {
         });
     }, [drawSegment]);
 
-    const addStroke = useCallback((stroke, shouldSync = true) => {
+    const addStroke = useCallback((stroke, shouldSync = true, isNewLocal = false) => {
         localStrokes.current.push(stroke);
         const ctx = canvasRef.current?.getContext('2d');
         if (ctx) {
             drawSegment(ctx, stroke.x1, stroke.y1, stroke.x2, stroke.y2, stroke.color, stroke.size);
         }
         
+        if (isNewLocal && stroke.pathId) {
+            const history = myPathHistory.current;
+            if (history[history.length - 1] !== stroke.pathId) {
+                history.push(stroke.pathId);
+                redoStack.current = []; // invalidate redo futures
+            }
+        }
+
         if (shouldSync && socket && roomId) {
             socket.emit('draw', { roomId, stroke });
         }
@@ -56,6 +66,8 @@ export const useDrawing = (canvasRef, socket, roomId) => {
 
     const clearCanvas = useCallback((shouldSync = true) => {
         localStrokes.current = [];
+        myPathHistory.current = [];
+        redoStack.current = [];
         const ctx = canvasRef.current?.getContext('2d');
         if (ctx) {
             ctx.fillStyle = '#ffffff';
@@ -67,24 +79,57 @@ export const useDrawing = (canvasRef, socket, roomId) => {
         }
     }, [canvasRef, socket, roomId]);
 
+    const triggerUndo = useCallback(() => {
+        const pathIdToUndo = myPathHistory.current.pop();
+        if (!pathIdToUndo) return;
+        
+        const undoneStrokes = localStrokes.current.filter(s => s.pathId === pathIdToUndo);
+        redoStack.current.push({ pathId: pathIdToUndo, strokes: undoneStrokes });
+        
+        localStrokes.current = localStrokes.current.filter(s => s.pathId !== pathIdToUndo);
+        
+        const ctx = canvasRef.current?.getContext('2d');
+        if (ctx) redrawAll(ctx);
+        
+        if (socket && roomId) socket.emit('undo-path', { roomId, pathId: pathIdToUndo });
+    }, [canvasRef, redrawAll, socket, roomId]);
+
+    const triggerRedo = useCallback(() => {
+        const redoObject = redoStack.current.pop();
+        if (!redoObject) return;
+        
+        myPathHistory.current.push(redoObject.pathId);
+        
+        redoObject.strokes.forEach(stroke => {
+             addStroke(stroke, true, false); 
+        });
+    }, [addStroke]);
+
     useEffect(() => {
         if (!socket) return;
         
         const onDraw = (stroke) => {
-            addStroke(stroke, false);
+            addStroke(stroke, false, false);
         };
         const onClear = () => {
             clearCanvas(false); 
         };
+        const onUndoPath = (pathId) => {
+            localStrokes.current = localStrokes.current.filter(s => s.pathId !== pathId);
+            const ctx = canvasRef.current?.getContext('2d');
+            if (ctx) redrawAll(ctx);
+        };
 
         socket.on('draw', onDraw);
         socket.on('clear-canvas', onClear);
+        socket.on('undo-path', onUndoPath);
 
         return () => {
             socket.off('draw', onDraw);
             socket.off('clear-canvas', onClear);
+            socket.off('undo-path', onUndoPath);
         };
-    }, [socket, addStroke, clearCanvas]);
+    }, [socket, addStroke, clearCanvas, redrawAll]);
 
     useEffect(() => {
         if (tools.isTrail) {
@@ -120,6 +165,8 @@ export const useDrawing = (canvasRef, socket, roomId) => {
         clearCanvas,
         redrawAll,
         getColor,
-        addStroke
+        addStroke,
+        triggerUndo,
+        triggerRedo
     };
 };
