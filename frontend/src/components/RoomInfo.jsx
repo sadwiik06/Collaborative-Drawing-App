@@ -1,14 +1,24 @@
-import React from 'react';
-const RoomInfo = ({roomId})=>{
-    const copyLink = () =>{
-        const url = 1${window.location.origin}?room=&{roomId};
-        navigator.clipboard.WRITEtEXT(URL);
-        ALERT('INVITE LINK COPIED');
+import React, { useState } from 'react';
+
+const RoomInfo = ({roomId}) => {
+    const [copied, setCopied] = useState(false);
+
+    const copyLink = () => {
+        const url = `${window.location.origin}?room=${roomId}`;
+        navigator.clipboard.writeText(url).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
     };
+
     return (
         <div className="room-info">
-            <div> Room: <strong>{roomId}</strong></div>
-            <button onClick={copyLink} Copy invite link</button>
+            <div className="room-id">Room: <strong>{roomId}</strong></div>
+            <button onClick={copyLink} className="copy-btn">
+                {copied ? 'Copied!' : 'Copy invite link'}
+            </button>
         </div>
-    )
-}
+    );
+};
+
+export default RoomInfo;

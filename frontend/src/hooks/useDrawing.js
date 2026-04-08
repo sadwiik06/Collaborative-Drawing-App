@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 
-export const useDrawing = (canvasRef) => {
+export const useDrawing = (canvasRef, socket, roomId) => {
     const [tools, setTools] = useState({
         color: '#000000',
         size: 5,
@@ -35,27 +35,56 @@ export const useDrawing = (canvasRef) => {
     }, []);
 
     const redrawAll = useCallback((ctx) => {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         localStrokes.current.forEach(stroke => {
             drawSegment(ctx, stroke.x1, stroke.y1, stroke.x2, stroke.y2, stroke.color, stroke.size);
         });
     }, [drawSegment]);
 
-    const addStroke = useCallback((stroke) => {
+    const addStroke = useCallback((stroke, shouldSync = true) => {
         localStrokes.current.push(stroke);
         const ctx = canvasRef.current?.getContext('2d');
         if (ctx) {
             drawSegment(ctx, stroke.x1, stroke.y1, stroke.x2, stroke.y2, stroke.color, stroke.size);
         }
-    }, [canvasRef, drawSegment]);
+        
+        if (shouldSync && socket && roomId) {
+            socket.emit('draw', { roomId, stroke });
+        }
+    }, [canvasRef, drawSegment, socket, roomId]);
 
-    const clearCanvas = useCallback(() => {
+    const clearCanvas = useCallback((shouldSync = true) => {
         localStrokes.current = [];
         const ctx = canvasRef.current?.getContext('2d');
         if (ctx) {
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         }
-    }, [canvasRef]);
+        
+        if (shouldSync && socket && roomId) {
+            socket.emit('clear-canvas', { roomId });
+        }
+    }, [canvasRef, socket, roomId]);
+
+    useEffect(() => {
+        if (!socket) return;
+        
+        const onDraw = (stroke) => {
+            addStroke(stroke, false);
+        };
+        const onClear = () => {
+            clearCanvas(false); 
+        };
+
+        socket.on('draw', onDraw);
+        socket.on('clear-canvas', onClear);
+
+        return () => {
+            socket.off('draw', onDraw);
+            socket.off('clear-canvas', onClear);
+        };
+    }, [socket, addStroke, clearCanvas]);
 
     useEffect(() => {
         if (tools.isTrail) {

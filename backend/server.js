@@ -1,7 +1,7 @@
-const app = require('/src/app');
+const app = require('./src/app');
 const http = require('http');
-const {Server} = require('socket.io')
-const socketManager  = require('./src/socketManager')
+const { Server } = require('socket.io')
+const socketManager = require('./src/socketManager')
 
 const server = http.createServer(app);
 const io = new Server(server,{

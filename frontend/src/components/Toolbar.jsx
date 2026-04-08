@@ -15,6 +15,11 @@ const Toolbar = () => {
         window.dispatchEvent(new CustomEvent('toolChange', { detail: { type: 'isRainbow', value: false } }));
     };
 
+    const handleShare = ()=>{
+        navigator.clipboard.writeText(window.location.href);
+        alert('Room link copied to clipboard! share it with your frined');
+    }
+
     const handleBrushSize = (e) => {
         window.dispatchEvent(new CustomEvent('toolChange', { detail: { type: 'size', value: e.target.value } }));
     };
@@ -51,6 +56,10 @@ const Toolbar = () => {
         }
     };
 
+    const handleSave = () => {
+        window.dispatchEvent(new CustomEvent('toolAction', { detail: { action: 'save' } }));
+    };
+
     return (
         <div className="toolbar">
             <input type="color" ref={colorPickerRef} onChange={handleColorChange} defaultValue="#000000" />
@@ -61,6 +70,7 @@ const Toolbar = () => {
             <button onClick={handleTrail} style={{ background: isTrail ? '#88ccff' : '' }}>Trail</button>
             
             <button onClick={handleClear}>Clear</button>
+            <button onClick={handleSave} style={{ backgroundColor: '#ffffffff', border: '1px solid #ccc' }}>Save as JPEG</button>
         </div>
     )
 };

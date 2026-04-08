@@ -2,16 +2,15 @@ const rooms = new Map();
 
 function getRoom(roomId){
     if(!rooms.has(roomId)){
-        rooms.set(roomId,{strokes:[],users: new Set()});
-
+        rooms.set(roomId, { strokes:[], users: new Map() });
     }
     return rooms.get(roomId);
 }
 
 function addStroke(roomId, stroke){
-    const getRoom = roomId;
-    roomId.strokes.push(stroke);
-    if(room.strokes.length > 200) room.shift();
+    const room = getRoom(roomId);
+    room.strokes.push(stroke);
+    if(room.strokes.length > 50000) room.strokes.shift();
 }
 
 function undoStroke(roomId){
@@ -19,11 +18,12 @@ function undoStroke(roomId){
     return room.strokes.pop() || null;
 }
 
-function addUser(roomId, socketId){
-    getRoom(roomId).users.add(socketId);
+function addUser(roomId, socketId, username){
+    const room = getRoom(roomId);
+    room.users.set(socketId, username);
 }
 
-function removeUser(roomId,socketId){
+function removeUser(roomId, socketId){
     const room = rooms.get(roomId);
     if(room){
         room.users.delete(socketId);
@@ -35,26 +35,32 @@ function getRoomStrokes(roomId){
     const room = rooms.get(roomId);
     return room ? room.strokes : [];
 }
+
 function clearRoomStrokes(roomId){
     const room = rooms.get(roomId);
     if(room) room.strokes = [];
-
 }
 
 function removeUserFromAllRooms(socketId){
-    for( const [roomId,room] of rooms.entries()){
+    const leftRooms = [];
+    for(const [roomId, room] of rooms.entries()){
         if(room.users.has(socketId)){
+            const username = room.users.get(socketId);
             room.users.delete(socketId);
-            if( room.users.size===0) rooms.delete(roomId);
+            leftRooms.push({ roomId, username });
+            if(room.users.size === 0) rooms.delete(roomId);
         }
     }
+    return leftRooms;
 }
-function getUserCount(roomId){
-    const room = rooms.get(roomId);
-    return room ? room.users.size:0;
 
+function getRoomUsers(roomId){
+    const room = rooms.get(roomId);
+    if(!room) return [];
+    return Array.from(room.users.values());
 }
 
 module.exports = {
-    getRoom,addStroke,undoStroke,addUser, removeUser,getRoomStrokes,clearRoomStrokes,removeUserFromAllRooms,getUserCount
+    getRoom, addStroke, undoStroke, addUser, removeUser, getRoomStrokes, 
+    clearRoomStrokes, removeUserFromAllRooms, getRoomUsers
 };

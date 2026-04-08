@@ -1,14 +1,22 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useDrawing } from '../hooks/useDrawing';
 
-const Canvas = () => {
+const Canvas = ({ socket, roomId, username }) => {
     const canvasRef = useRef(null);
-    const { tools, setTools, drawing, lastPoint, addStroke, getColor, redrawAll, clearCanvas } = useDrawing(canvasRef);
+    const { tools, setTools, drawing, lastPoint, addStroke, getColor, redrawAll, clearCanvas } = useDrawing(canvasRef, socket, roomId);
+    const [cursors, setCursors] = useState({});
 
     useEffect(() => {
         const handleToolAction = (e) => {
             const { action } = e.detail;
             if (action === 'clear') clearCanvas();
+            if (action === 'save') {
+                const url = canvasRef.current.toDataURL("image/jpeg", 0.9);
+                const link = document.createElement("a");
+                link.download = "drawing.jpeg";
+                link.href = url;
+                link.click();
+            }
         };
 
         const handleToolChange = (e) => {
@@ -16,13 +24,22 @@ const Canvas = () => {
             setTools(prev => ({ ...prev, [type]: value }));
         };
 
+        const handleLoadStrokes = (e) => {
+            const initialStrokes = e.detail;
+            initialStrokes.forEach(stroke => {
+                addStroke(stroke, false);
+            });
+        };
+
         window.addEventListener('toolAction', handleToolAction);
         window.addEventListener('toolChange', handleToolChange);
+        window.addEventListener('loadStrokes', handleLoadStrokes);
         return () => {
             window.removeEventListener('toolAction', handleToolAction);
             window.removeEventListener('toolChange', handleToolChange);
+            window.removeEventListener('loadStrokes', handleLoadStrokes);
         };
-    }, [setTools, clearCanvas]);
+    }, [setTools, clearCanvas, addStroke]);
 
     useEffect(() => {
         const resize = () => {
@@ -90,18 +107,77 @@ const Canvas = () => {
         lastPoint.current = null;
     };
 
+    const handleMouseMove = (e) => {
+        draw(e);
+        if (!socket || !roomId) return;
+        const now = Date.now();
+        if (now - (canvasRef.current.lastEmit || 0) > 30) {
+            const { x, y } = getCanvasCoords(e);
+            socket.emit('cursor-move', { roomId, cursorData: { x, y, name: username } })
+            canvasRef.current.lastEmit = now;
+        }
+    };
+
+    useEffect(() => {
+        if (!socket) return;
+        socket.on('cursor-move', (data) => {
+            setCursors(prev => ({ ...prev, [data.socketId]: { x: data.x, y: data.y, name: data.name } }));
+        });
+        socket.on('user-disconnected', (socketId) => {
+            setCursors(prev => {
+                const newCursors = { ...prev };
+                delete newCursors[socketId];
+                return newCursors;
+            });
+        });
+        return () => {
+            socket.off('cursor-move');
+            socket.off('user-disconnected');
+        };
+    }, [socket]);
+
     return (
-        <canvas
-            ref={canvasRef}
-            className="draw-canvas"
-            onMouseDown={startDraw}
-            onMouseMove={draw}
-            onMouseUp={endDraw}
-            onMouseLeave={endDraw}
-            onTouchStart={startDraw}
-            onTouchMove={draw}
-            onTouchEnd={endDraw}
-        />
+        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <canvas
+                ref={canvasRef}
+                className="draw-canvas"
+                onMouseDown={startDraw}
+                onMouseMove={handleMouseMove}
+                onMouseUp={endDraw}
+                onMouseLeave={endDraw}
+                onTouchStart={startDraw}
+                onTouchMove={handleMouseMove}
+                onTouchEnd={endDraw}
+            />
+            {Object.entries(cursors).map(([id, cursor]) => (
+                <div key={id} style={{
+                    position: 'absolute',
+                    left: cursor.x,
+                    top: cursor.y,
+                    pointerEvents: 'none',
+                    zIndex: 10
+                }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" style={{ position: 'absolute', left: 0, top: 0, transform: 'translate(-2px, -2px)' }}>
+                        <path d="M5.5 3L18.5 10.5L12.5 12.5L10.5 18.5L5.5 3Z" fill="#ff4444" stroke="white" strokeWidth="1.5" />
+                    </svg>
+                    <div style={{
+                        position: 'absolute',
+                        left: 14,
+                        top: 14,
+                        backgroundColor: '#ff4444',
+                        color: 'white',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        whiteSpace: 'nowrap',
+                        fontWeight: 'bold',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                    }}>
+                        {cursor.name}
+                    </div>
+                </div>
+            ))}
+        </div>
     );
 };
 
