@@ -15,10 +15,7 @@ const Toolbar = () => {
         window.dispatchEvent(new CustomEvent('toolChange', { detail: { type: 'isRainbow', value: false } }));
     };
 
-    const handleShare = ()=>{
-        navigator.clipboard.writeText(window.location.href);
-        alert('Room link copied to clipboard! share it with your frined');
-    }
+
 
     const handleBrushSize = (e) => {
         window.dispatchEvent(new CustomEvent('toolChange', { detail: { type: 'size', value: e.target.value } }));
