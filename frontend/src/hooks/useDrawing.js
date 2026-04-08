@@ -129,7 +129,7 @@ export const useDrawing = (canvasRef, socket, roomId) => {
             socket.off('clear-canvas', onClear);
             socket.off('undo-path', onUndoPath);
         };
-    }, [socket, addStroke, clearCanvas, redrawAll]);
+    }, [socket, addStroke, clearCanvas, redrawAll, canvasRef]);
 
     useEffect(() => {
         if (tools.isTrail) {

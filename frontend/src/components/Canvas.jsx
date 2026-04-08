@@ -42,7 +42,7 @@ const Canvas = ({ socket, roomId, username }) => {
             window.removeEventListener('toolChange', handleToolChange);
             window.removeEventListener('loadStrokes', handleLoadStrokes);
         };
-    }, [setTools, clearCanvas, addStroke]);
+    }, [setTools, clearCanvas, addStroke, triggerUndo, triggerRedo]);
 
     useEffect(() => {
         const resize = () => {
