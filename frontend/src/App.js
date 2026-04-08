@@ -12,7 +12,8 @@ function App(){
   const [notification, setNotification] = useState('');
   
   const lastJoinedSocketId = useRef(null);
-  const {socket, isConnected} = useSocket('http://localhost:3000');
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
+  const {socket, isConnected} = useSocket(BACKEND_URL);
   
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
