@@ -26,12 +26,12 @@ function addUser(roomId, socketId, username){
 }
 
 function removeUser(roomId, socketId){
-    const room = rooms.get(roomId);
-    if(room){
-        room.users.delete(socketId);
-        if(room.users.size === 0) rooms.delete(roomId);
-    }
+    const set=getRoomUsers.get(roomId);
+    if(set) set.delete(socketId);
+    if(set.size === 0) getRoomUsers.delete(roomId);
+    
 }
+
 
 function getRoomStrokes(roomId){
     const room = rooms.get(roomId);
