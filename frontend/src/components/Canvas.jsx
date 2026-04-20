@@ -1,11 +1,19 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useDrawing } from '../hooks/useDrawing';
 
-const Canvas = ({ socket, roomId, username }) => {
+const Canvas = ({ socket, roomId, username, isDrawer, isDrawingPhase, initialStrokes }) => {
+    
     const canvasRef = useRef(null);
     const currentPathId = useRef(null);
-    const { tools, setTools, drawing, lastPoint, addStroke, getColor, redrawAll, clearCanvas, triggerUndo, triggerRedo } = useDrawing(canvasRef, socket, roomId);
+    const { tools, setTools, drawing, lastPoint, addStroke, getColor, redrawAll, clearCanvas, triggerUndo, triggerRedo, loadInitialStrokes } = useDrawing(canvasRef, socket, roomId);
     const [cursors, setCursors] = useState({});
+
+    // Load initial strokes when the canvas mounts and they are provided
+    useEffect(() => {
+        if (initialStrokes && initialStrokes.length > 0) {
+            loadInitialStrokes(initialStrokes);
+        }
+    }, [initialStrokes, loadInitialStrokes]);
 
     useEffect(() => {
         const handleToolAction = (e) => {
@@ -27,20 +35,11 @@ const Canvas = ({ socket, roomId, username }) => {
             setTools(prev => ({ ...prev, [type]: value }));
         };
 
-        const handleLoadStrokes = (e) => {
-            const initialStrokes = e.detail;
-            initialStrokes.forEach(stroke => {
-                addStroke(stroke, false);
-            });
-        };
-
         window.addEventListener('toolAction', handleToolAction);
         window.addEventListener('toolChange', handleToolChange);
-        window.addEventListener('loadStrokes', handleLoadStrokes);
         return () => {
             window.removeEventListener('toolAction', handleToolAction);
             window.removeEventListener('toolChange', handleToolChange);
-            window.removeEventListener('loadStrokes', handleLoadStrokes);
         };
     }, [setTools, clearCanvas, addStroke, triggerUndo, triggerRedo]);
 
@@ -80,20 +79,35 @@ const Canvas = ({ socket, roomId, username }) => {
 
     const startDraw = (e) => {
         e.preventDefault();
+        const { x, y } = getCanvasCoords(e);
+        
+        if (tools.isFilling) {
+            const color = getColor();
+            const stroke = {
+                action: 'fill',
+                pathId: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                startX: x,
+                startY: y,
+                color
+            };
+            addStroke(stroke, true, true);
+            return; // Don't proceed to normal drawing
+        }
+        
         drawing.current = true;
         currentPathId.current = Date.now().toString(36) + Math.random().toString(36).substr(2);
-        const { x, y } = getCanvasCoords(e);
         lastPoint.current = { x, y };
     };
 
     const draw = (e) => {
-        if (!drawing.current) return;
+        if (!drawing.current || tools.isFilling) return;
         e.preventDefault();
         const { x, y } = getCanvasCoords(e);
         if (lastPoint.current) {
             const color = getColor();
             const size = parseInt(tools.size, 10);
             const stroke = {
+                action: 'draw',
                 pathId: currentPathId.current,
                 x1: lastPoint.current.x,
                 y1: lastPoint.current.y,
