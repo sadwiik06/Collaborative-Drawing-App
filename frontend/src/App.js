@@ -228,17 +228,19 @@ function App(){
     return (
       <div className="lobby-screen">
         <div className="lobby-card">
-            <div className="skribbl-logo">
+            <div className="sketch-rumble-logo wobble-constant">
                 <span className="s">S</span>
                 <span className="k">k</span>
-                <span className="r">r</span>
-                <span className="i">i</span>
-                <span className="b1">b</span>
-                <span className="b2">b</span>
+                <span className="e">e</span>
+                <span className="t">t</span>
+                <span className="c">c</span>
+                <span className="h">h</span>
+                <span className="r">R</span>
+                <span className="u">u</span>
+                <span className="m">m</span>
+                <span className="b">b</span>
                 <span className="l">l</span>
-                <span className="dot">.</span>
-                <span className="io">io</span>
-                <span className="ex">!</span>
+                <span className="e">e</span>
             </div>
             <div style={{ width: '100%' }}>
                 <input 
@@ -266,17 +268,19 @@ function App(){
       <div className='app'>
         <div className="lobby-screen">
           <div className="lobby-card">
-              <div className="skribbl-logo">
+              <div className="sketch-rumble-logo wobble-constant" style={{ fontSize: '32px' }}>
                   <span className="s">S</span>
                   <span className="k">k</span>
-                  <span className="r">r</span>
-                  <span className="i">i</span>
-                  <span className="b1">b</span>
-                  <span className="b2">b</span>
+                  <span className="e">e</span>
+                  <span className="t">t</span>
+                  <span className="c">c</span>
+                  <span className="h">h</span>
+                  <span className="r">R</span>
+                  <span className="u">u</span>
+                  <span className="m">m</span>
+                  <span className="b">b</span>
                   <span className="l">l</span>
-                  <span className="dot">.</span>
-                  <span className="io">io</span>
-                  <span className="ex">!</span>
+                  <span className="e">e</span>
               </div>
               <form className="join-modal" onSubmit={(e) => {
                   e.preventDefault();
