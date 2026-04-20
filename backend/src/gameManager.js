@@ -1,4 +1,5 @@
 const {getWordOptions,getRandomWord} = require('./wordList');
+const roomManager = require('./roomManager');
 
 const GAME_STATES={
     WAITING: 'waiting',
@@ -99,6 +100,11 @@ class Game{
         
         this.currentDrawerId = this.drawOrder[this.currentTurnInRound];
         this.currentTurnInRound++;
+        
+        // --- RESET CANVAS FOR NEW TURN ---
+        roomManager.clearRoomStrokes(this.roomId);
+        this.broadcastToRoom('clear-canvas');
+        // ---------------------------------
         
         this.wordOptions = getWordOptions('medium');
         

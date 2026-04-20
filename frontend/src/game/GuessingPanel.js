@@ -1,4 +1,5 @@
 import React,{useState} from 'react';
+import '../App.css';
 const GuessingPanel = ({wordHint,timeLeft,onGuess,disabled})=>{
     const [guess,setGuess]=useState('');
     const handleSubmit=(e)=>{

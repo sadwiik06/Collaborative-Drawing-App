@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useDrawing } from '../hooks/useDrawing';
-
+import '../App.css';
 const Canvas = ({ socket, roomId, username, isDrawer, isDrawingPhase, initialStrokes }) => {
     
     const canvasRef = useRef(null);
@@ -53,8 +53,20 @@ const Canvas = ({ socket, roomId, username, isDrawer, isDrawingPhase, initialStr
             redrawAll(ctx);
         };
         resize();
+        
+        let observer;
+        if (canvasRef.current && canvasRef.current.parentElement) {
+            observer = new ResizeObserver(() => {
+                resize();
+            });
+            observer.observe(canvasRef.current.parentElement);
+        }
+
         window.addEventListener('resize', resize);
-        return () => window.removeEventListener('resize', resize);
+        return () => {
+            window.removeEventListener('resize', resize);
+            if (observer) observer.disconnect();
+        };
     }, [redrawAll]);
 
     const getCanvasCoords = (e) => {
@@ -78,6 +90,7 @@ const Canvas = ({ socket, roomId, username, isDrawer, isDrawingPhase, initialStr
     };
 
     const startDraw = (e) => {
+        if (!isDrawer || !isDrawingPhase) return;
         e.preventDefault();
         const { x, y } = getCanvasCoords(e);
         
@@ -100,7 +113,7 @@ const Canvas = ({ socket, roomId, username, isDrawer, isDrawingPhase, initialStr
     };
 
     const draw = (e) => {
-        if (!drawing.current || tools.isFilling) return;
+        if (!isDrawer || !isDrawingPhase || !drawing.current || tools.isFilling) return;
         e.preventDefault();
         const { x, y } = getCanvasCoords(e);
         if (lastPoint.current) {
@@ -127,7 +140,7 @@ const Canvas = ({ socket, roomId, username, isDrawer, isDrawingPhase, initialStr
     };
 
     const handleMouseMove = (e) => {
-        draw(e);
+        if (isDrawer && isDrawingPhase) draw(e);
         if (!socket || !roomId) return;
         const now = Date.now();
         if (now - (canvasRef.current.lastEmit || 0) > 30) {
@@ -156,10 +169,16 @@ const Canvas = ({ socket, roomId, username, isDrawer, isDrawingPhase, initialStr
     }, [socket]);
 
     return (
-        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+        <div className="canvas-area">
             <canvas
                 ref={canvasRef}
                 className="draw-canvas"
+                style={{ 
+                    cursor: (isDrawer) 
+                        ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4" fill="black" stroke="white" stroke-width="1"/></svg>') 6 6, crosshair`
+                        : 'default',
+                    touchAction: 'none'
+                }}
                 onMouseDown={startDraw}
                 onMouseMove={handleMouseMove}
                 onMouseUp={endDraw}
@@ -177,13 +196,13 @@ const Canvas = ({ socket, roomId, username, isDrawer, isDrawingPhase, initialStr
                     zIndex: 10
                 }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" style={{ position: 'absolute', left: 0, top: 0, transform: 'translate(-2px, -2px)' }}>
-                        <path d="M5.5 3L18.5 10.5L12.5 12.5L10.5 18.5L5.5 3Z" fill="#ff4444" stroke="white" strokeWidth="1.5" />
+                        <path d="M5.5 3L18.5 10.5L12.5 12.5L10.5 18.5L5.5 3Z" fill="#000000" stroke="white" strokeWidth="1.5" />
                     </svg>
                     <div style={{
                         position: 'absolute',
                         left: 14,
                         top: 14,
-                        backgroundColor: '#ff4444',
+                        backgroundColor: '#000000',
                         color: 'white',
                         padding: '2px 6px',
                         borderRadius: '4px',

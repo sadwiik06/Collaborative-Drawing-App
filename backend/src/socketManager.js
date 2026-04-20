@@ -180,14 +180,6 @@ module.exports = (io) => {
             const player = game.players.get(socket.id);
             const playerName = player ? player.name : 'Unknown';
             
-            // Broadcast the guess as a chat message to everyone
-            io.to(roomId).emit('chat-message', {
-                username: playerName,
-                message: guess,
-                timestamp: Date.now(),
-                type: 'guess'
-            });
-            
             const result = game.handleGuess(socket.id, guess);
             if (result.success) {
                 // Broadcast correct guess notification
@@ -196,6 +188,14 @@ module.exports = (io) => {
                     message: `${playerName} guessed the word! (+${result.points} pts)`,
                     timestamp: Date.now(),
                     type: 'correct'
+                });
+            } else {
+                // Broadcast the guess as a chat message to everyone
+                io.to(roomId).emit('chat-message', {
+                    username: playerName,
+                    message: guess,
+                    timestamp: Date.now(),
+                    type: 'guess'
                 });
             }
         });

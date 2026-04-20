@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-
+import '../App.css';
 const WordSelection = ({ onSelectWord, timeLimit = 15, wordOptions = [] }) => {
     const [timeLeft, setTimeLeft] = useState(timeLimit);
 
@@ -15,10 +15,14 @@ const WordSelection = ({ onSelectWord, timeLimit = 15, wordOptions = [] }) => {
     return (
         <div className="word-selection">
             <h2>Choose a word to draw</h2>
-            <div className="timer">Time left: {timeLeft}s</div>
+            <div className="timer">{timeLeft}s</div>
             <div className="word-options">
                 {wordOptions.map(word => (
-                    <button key={word} onClick={() => onSelectWord(word)}>
+                    <button 
+                        key={word} 
+                        className="word-choice-btn"
+                        onClick={() => onSelectWord(word)}
+                    >
                         {word}
                     </button>
                 ))}

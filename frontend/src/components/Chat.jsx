@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+import '../App.css';
 const Chat = ({ messages = [], onSendMessage, disabled = false, isDrawer = false }) => {
     const [input, setInput] = useState('');
     const messagesEndRef = useRef(null);
@@ -28,11 +29,11 @@ const Chat = ({ messages = [], onSendMessage, disabled = false, isDrawer = false
             </div>
             <div className="chat-messages">
                 {messages.length === 0 && (
-                    <div className="chat-empty">No messages yet. Start guessing!</div>
+                    <div className="chat-empty">Chat is empty.</div>
                 )}
                 {messages.map((msg, i) => (
                     <div key={i} className={getMessageClass(msg)}>
-                        <span className="chat-username">{msg.username}</span>
+                        {msg.username && <span className="chat-username">{msg.username}: </span>}
                         <span className="chat-text">{msg.message}</span>
                     </div>
                 ))}

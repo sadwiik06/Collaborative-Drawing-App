@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import '../App.css';
 const SKRIBBL_COLORS_TOP = ['#ffffff', '#c1c1c1', '#ef130b', '#ff7100', '#ffe400', '#00cc00', '#00ffcc', '#00b2ff', '#231fd3', '#a300ba', '#ff66cc', '#ffa07a', '#a0522d'];
 const SKRIBBL_COLORS_BOT = ['#000000', '#4c4c4c', '#740b07', '#c23800', '#e8a200', '#005510', '#008855', '#00569e', '#0e0865', '#550069', '#a75574', '#cc7755', '#63300d'];
 const BRUSH_SIZES = [4, 10, 20, 32];
@@ -50,15 +50,17 @@ const Toolbar = () => {
             </div>
 
             <div className="toolbar-colors">
-                <div className="color-row">
-                    {SKRIBBL_COLORS_TOP.map(c => (
-                        <div key={c} className="color-swatch" style={{ backgroundColor: c }} onClick={() => handleColorClick(c)}></div>
-                    ))}
-                </div>
-                <div className="color-row">
-                    {SKRIBBL_COLORS_BOT.map(c => (
-                        <div key={c} className="color-swatch" style={{ backgroundColor: c }} onClick={() => handleColorClick(c)}></div>
-                    ))}
+                <div className="color-rows">
+                    <div className="color-row">
+                        {SKRIBBL_COLORS_TOP.map(c => (
+                            <div key={c} className="color-swatch" style={{ backgroundColor: c }} onClick={() => handleColorClick(c)}></div>
+                        ))}
+                    </div>
+                    <div className="color-row">
+                        {SKRIBBL_COLORS_BOT.map(c => (
+                            <div key={c} className="color-swatch" style={{ backgroundColor: c }} onClick={() => handleColorClick(c)}></div>
+                        ))}
+                    </div>
                 </div>
                 <div className="current-color" style={{ backgroundColor: activeTool === 'eraser' ? '#ffffff' : selectedColor }}></div>
             </div>

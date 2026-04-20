@@ -7,6 +7,7 @@ import { useSocket } from './hooks/useSocket';
 import { useGameState } from './hooks/useGameState';
 import Lobby from './game/Lobby';
 import WordSelection from './game/WordSelection';
+import RoundEndScreen from './game/RoundEndScreen';
 import './App.css';
 
 function App(){
@@ -77,6 +78,7 @@ function App(){
           <div className="game-overlay-container">
             <Lobby
               players={players}
+              roomId={roomId}
               onStartGame={startGame}
             />
           </div>
@@ -100,49 +102,83 @@ function App(){
       case 'drawing':
         return (
           <div className="game-layout">
-            <div className="main-canvas-area">
-                <Toolbar />
-                <div className="game-info-bar">
-                    <div className="round-info">Round {roundNumber}</div>
-                    <div className="word-hint-display">{wordHint}</div>
-                    <div className="timer-display">⏱ {timeLeft}s</div>
+            <header className="game-header">
+                <div className="game-timer">
+                    {timeLeft}
                 </div>
-                <div className="canvas-container">
-                    <Canvas socket={socket} roomId={roomId} username={username} isDrawer={isDrawer} isDrawingPhase={true} initialStrokes={initialStrokes} />
+                <div className="game-round-info">
+                    <span className="round-label">Round</span>
+                    <span className="round-value">{roundNumber} / {maxRounds}</span>
                 </div>
-            </div>
-            <div className="chat-sidebar">
-                <Chat
-                    messages={chatMessages}
-                    onSendMessage={makeGuess}
-                    isDrawer={isDrawer}
-                />
+                <div className="game-word-area">
+                    <span className="game-word-label">{isDrawer ? 'DRAW THIS' : 'GUESS THIS'}</span>
+                    <span className={`game-word ${!isDrawer && wordHint.includes('_') ? 'hidden' : ''}`}>
+                        {wordHint}
+                    </span>
+                </div>
+                <div className="game-header-right">
+                    <RoomInfo roomId={roomId} />
+                </div>
+            </header>
+
+            <div className="main-area">
+                <div className="sidebar">
+                    <h3>Players</h3>
+                    <ul className="user-list">
+                        {players.sort((a,b) => b.score - a.score).map((player, index) => (
+                            <li key={player.id || index} className="player-item">
+                                <span className={`player-rank rank-${index + 1}`}>{index + 1}</span>
+                                <div className="player-avatar" style={{ backgroundColor: `hsl(${index * 137.5 % 360}, 50%, 50%)` }}>
+                                    {player.name[0].toUpperCase()}
+                                </div>
+                                <div className="player-info">
+                                    <div className={`player-name ${player.name === username ? 'is-you' : ''}`}>
+                                        {turnInfo?.drawerId === player.id && <span>✏️ </span>}
+                                        {player.name}
+                                    </div>
+                                    <div className="player-score">{player.score} points</div>
+                                </div>
+
+                            </li>
+                        ))}
+                    </ul>
+                    <div style={{ marginTop: 'auto', padding: '10px' }}>
+                        <button className="leave-btn" onClick={leaveRoom}>Leave Room</button>
+                    </div>
+                </div>
+
+                <div className="content-area">
+                    <div className="canvas-wrapper">
+                        {isDrawer && <Toolbar />}
+                        <Canvas 
+                            socket={socket} 
+                            roomId={roomId} 
+                            username={username} 
+                            isDrawer={isDrawer} 
+                            isDrawingPhase={true} 
+                            initialStrokes={initialStrokes} 
+                        />
+                    </div>
+                    <Chat
+                        messages={chatMessages}
+                        onSendMessage={makeGuess}
+                        isDrawer={isDrawer}
+                    />
+                </div>
             </div>
           </div>
         );
       case 'round_end':
         return (
           <div className="game-overlay-container">
-            <div className="round-end-view">
-                <h2>Round {roundEndData?.roundNumber} — Turn Over!</h2>
-                <p>The word was: <strong>{roundEndData?.word}</strong></p>
-                <div className="round-scores">
-                    {roundEndData?.scores?.map((p, i) => (
-                        <div key={p.id || i} className="score-row">
-                            <span>{p.name}</span>
-                            <span className="score-value">{p.score} pts</span>
-                        </div>
-                    ))}
-                </div>
-                <p className="next-round-wait">Next round starting soon...</p>
-            </div>
+            <RoundEndScreen roundEndData={roundEndData} />
           </div>
         );
       case 'game_end':
         return (
           <div className="game-overlay-container">
             <div className="game-end-view">
-                <h1>🏆 Game Over!</h1>
+                <h1>Game Over!</h1>
                 <h2>Winner: {winner || 'No winner'}</h2>
                 <div className="round-scores">
                     {finalScores?.map((p, i) => (
@@ -190,11 +226,23 @@ function App(){
 
   if(isHome) {
     return (
-      <div className="modal-overlay">
-        <div className="home-modal">
-            <h2>Welcome to Collaborative Drawing App!</h2>
-            <div className="home-input-group">
+      <div className="lobby-screen">
+        <div className="lobby-card">
+            <div className="skribbl-logo">
+                <span className="s">S</span>
+                <span className="k">k</span>
+                <span className="r">r</span>
+                <span className="i">i</span>
+                <span className="b1">b</span>
+                <span className="b2">b</span>
+                <span className="l">l</span>
+                <span className="dot">.</span>
+                <span className="io">io</span>
+                <span className="ex">!</span>
+            </div>
+            <div style={{ width: '100%' }}>
                 <input 
+                    className="lobby-input"
                     type="text" 
                     placeholder="Enter your name" 
                     value={username}
@@ -202,9 +250,9 @@ function App(){
                     autoFocus 
                 />
             </div>
-            <div className="home-action-buttons">
-                <button className="primary-btn world-btn" onClick={joinWorldRoom}>🌍 Play World</button>
-                <button className="primary-btn private-btn" onClick={createPrivateRoom}>🔒 Create Private Room</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                <button className="lobby-btn" onClick={joinWorldRoom}>Play World</button>
+                <button className="lobby-btn secondary" onClick={createPrivateRoom}>Create Private Room</button>
             </div>
         </div>
       </div>
@@ -215,17 +263,40 @@ function App(){
 
   if(!username && !isHome) {
     return (
-      <div className="modal-overlay">
-        <form className="join-modal" onSubmit={(e) => {
-            e.preventDefault();
-            const name = e.target.username.value.trim();
-            if(name) setUsername(name);
-        }}>
-            <h2>Join Drawing Room</h2>
-            <p className="room-label">Room: <strong>{roomId}</strong></p>
-            <input type="text" name="username" placeholder="Enter your name" autoFocus required />
-            <button type="submit">Join</button>
-        </form>
+      <div className='app'>
+        <div className="lobby-screen">
+          <div className="lobby-card">
+              <div className="skribbl-logo">
+                  <span className="s">S</span>
+                  <span className="k">k</span>
+                  <span className="r">r</span>
+                  <span className="i">i</span>
+                  <span className="b1">b</span>
+                  <span className="b2">b</span>
+                  <span className="l">l</span>
+                  <span className="dot">.</span>
+                  <span className="io">io</span>
+                  <span className="ex">!</span>
+              </div>
+              <form className="join-modal" onSubmit={(e) => {
+                  e.preventDefault();
+                  const name = e.target.username.value.trim();
+                  if(name) setUsername(name);
+              }} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+                  <h2 style={{ fontFamily: "'Baloo 2', cursive", color: 'var(--blue-dark)', fontSize: '24px', margin: 0 }}>Join Room</h2>
+                  <p className="invite-label" style={{ margin: 0 }}>Room ID: <strong style={{ color: 'var(--blue-mid)' }}>{roomId}</strong></p>
+                  <input 
+                      className="lobby-input"
+                      type="text" 
+                      name="username" 
+                      placeholder="Enter your name" 
+                      autoFocus 
+                      required 
+                  />
+                  <button className="lobby-btn" type="submit">Join Game</button>
+              </form>
+          </div>
+        </div>
       </div>
     );
   }
@@ -233,25 +304,13 @@ function App(){
   return(
     <div className='app'>
       {notification && <div className="toast">{notification}</div>}
-      <div className="main-area">
-          <div className="sidebar">
-              <h3>Players</h3>
-              <ul className="user-list">
-                  {players.map((player, index) => (
-                      <li key={player.id || index}>
-                          {player.name} <small>({player.score})</small>
-                      </li>
-                  ))}
-              </ul>
-              <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #ccc' }}>
-                  <RoomInfo roomId={roomId} />
-                  <button className="leave-btn" onClick={leaveRoom}>Leave Room</button>
-              </div>
-          </div>
-          <div className="content-area">
+      {gameState === 'drawing' ? (
+          renderGameContent()
+      ) : (
+          <div className="lobby-screen" style={{ width: '100%', height: '100%' }}>
               {renderGameContent()}
           </div>
-      </div>
+      )}
     </div>
   )
 }
