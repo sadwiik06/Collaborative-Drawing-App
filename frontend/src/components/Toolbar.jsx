@@ -7,7 +7,7 @@ const BRUSH_SIZES = [4, 10, 20, 32];
 const Toolbar = () => {
     const [selectedColor, setSelectedColor] = useState('#000000');
     const [selectedSize, setSelectedSize] = useState(10);
-    const [activeTool, setActiveTool] = useState('brush'); // 'brush', 'fill', 'eraser'
+    const [activeTool, setActiveTool] = useState('brush'); 
 
     const handleColorClick = (color) => {
         setSelectedColor(color);

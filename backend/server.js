@@ -6,7 +6,13 @@ const socketManager = require('./src/socketManager')
 const server = http.createServer(app);
 const io = new Server(server,{
     cors:{
-        origin : process.env.FRONTEND_URL || ['http://localhost:3000','http://localhost:3001','http://localhost:5173'],
+        origin : [
+            process.env.FRONTEND_URL, 
+            'https://collaborative-drawing-app.vercel.app',
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://localhost:5173'
+        ].filter(Boolean),
         methods :['GET','POST','PUT'],
     }
 });

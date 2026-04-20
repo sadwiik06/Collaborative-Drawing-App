@@ -13,8 +13,7 @@ export const useDrawing = (canvasRef, socket, roomId) => {
     const localStrokes = useRef([]);
     const myPathHistory = useRef([]);
     const redoStack = useRef([]);
-    const hue = useRef(0);
-    const trailInterval = useRef(null);
+
 
     const getColor = useCallback(() => {
         if (tools.isErasing) return '#ffffff';
@@ -153,7 +152,7 @@ export const useDrawing = (canvasRef, socket, roomId) => {
         if (shouldSync && socket && roomId) {
             socket.emit('draw', { roomId, stroke });
         }
-    }, [canvasRef, drawSegment, socket, roomId]);
+    }, [canvasRef, drawSegment, socket, roomId, runFloodFill]);
 
     const clearCanvas = useCallback((shouldSync = true) => {
         localStrokes.current = [];
@@ -205,7 +204,7 @@ export const useDrawing = (canvasRef, socket, roomId) => {
         localStrokes.current = [...strokesArray];
         const ctx = canvasRef.current?.getContext('2d', { willReadFrequently: true });
         if (ctx) redrawAll(ctx);
-    }, [redrawAll]);
+    }, [redrawAll, canvasRef]);
 
     useEffect(() => {
         if (!socket) return;
