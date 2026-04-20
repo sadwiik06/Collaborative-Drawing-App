@@ -146,7 +146,7 @@ export const useDrawing = (canvasRef, socket, roomId) => {
             const history = myPathHistory.current;
             if (history.length === 0 || history[history.length - 1] !== stroke.pathId) {
                 history.push(stroke.pathId);
-                redoStack.current = []; // invalidate redo futures
+                redoStack.current = []; 
             }
         }
 
@@ -195,7 +195,7 @@ export const useDrawing = (canvasRef, socket, roomId) => {
              addStroke(stroke, false, false); 
         });
         
-        // Sync the redone strokes
+        
         redoObject.strokes.forEach(stroke => {
              if (socket && roomId) socket.emit('draw', { roomId, stroke });
         });
@@ -241,7 +241,6 @@ export const useDrawing = (canvasRef, socket, roomId) => {
     }, [socket, addStroke, clearCanvas, redrawAll, canvasRef]);
 
     useEffect(() => {
-        // Removed trail effect handling
     }, [tools.isTrail, canvasRef, redrawAll]);
 
     return {

@@ -17,7 +17,6 @@ export const useGameState = (socket, roomId, playerName) => {
     const [chatMessages, setChatMessages] = useState([]);
     const [initialStrokes, setInitialStrokes] = useState([]);
 
-    // Join room
     useEffect(() => {
         if (!socket || !roomId || !playerName) return;
         socket.emit('join-room', { roomId, username: playerName }, (response) => {
@@ -28,7 +27,6 @@ export const useGameState = (socket, roomId, playerName) => {
                 setRoundNumber(response.roundNumber || 0);
                 setWordHint(response.wordHint || '');
                 setIsDrawer(response.currentDrawerId === socket.id);
-                // Save past strokes so Canvas can load them upon mounting
                 if (response.strokes && response.strokes.length > 0) {
                     setInitialStrokes(response.strokes);
                 }
@@ -38,7 +36,6 @@ export const useGameState = (socket, roomId, playerName) => {
         });
     }, [socket, roomId, playerName]);
 
-    // Listen for game events
     useEffect(() => {
         if (!socket) return;
 

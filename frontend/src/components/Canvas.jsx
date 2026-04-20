@@ -8,7 +8,6 @@ const Canvas = ({ socket, roomId, username, isDrawer, isDrawingPhase, initialStr
     const { tools, setTools, drawing, lastPoint, addStroke, getColor, redrawAll, clearCanvas, triggerUndo, triggerRedo, loadInitialStrokes } = useDrawing(canvasRef, socket, roomId);
     const [cursors, setCursors] = useState({});
 
-    // Load initial strokes when the canvas mounts and they are provided
     useEffect(() => {
         if (initialStrokes && initialStrokes.length > 0) {
             loadInitialStrokes(initialStrokes);
@@ -104,7 +103,7 @@ const Canvas = ({ socket, roomId, username, isDrawer, isDrawingPhase, initialStr
                 color
             };
             addStroke(stroke, true, true);
-            return; // Don't proceed to normal drawing
+            return; 
         }
         
         drawing.current = true;

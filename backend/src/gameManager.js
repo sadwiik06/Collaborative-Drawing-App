@@ -41,7 +41,6 @@ class Game{
         if(this.players.size===0){
             this.stopRoundTimer();
         } else if (this.players.size === 1 && this.state !== GAME_STATES.WAITING) {
-            // Hold state: Stop the game when only 1 player remains.
             this.stopRoundTimer();
             this.state = GAME_STATES.WAITING;
             this.broadcastToRoom('game:hold', { message: 'Waiting for more players to continue...' });
@@ -59,7 +58,6 @@ class Game{
         this.totalTurns = 0;
         this.drawOrder = Array.from(this.players.keys());
         
-        // Reset all scores
         for(const [,p] of this.players.entries()){
             p.score = 0;
         }
@@ -89,11 +87,9 @@ class Game{
         this.revealedIndices.clear();
         this.state = GAME_STATES.WORD_SELECTION;
         
-        // Refresh draw order in case players left/joined
         this.drawOrder = Array.from(this.players.keys());
         if(this.drawOrder.length === 0) return;
         
-        // Wrap turn index
         if(this.currentTurnInRound >= this.drawOrder.length){
             this.currentTurnInRound = 0;
         }
@@ -156,17 +152,15 @@ class Game{
         this.startRoundTimer();
     }
 
-    // Build the current hint string with revealed letters
     buildHint(){
         if(!this.currentWord) return '';
         return this.currentWord.split('').map((c, i)=>{
-            if(!/[a-zA-Z]/.test(c)) return c; // Keep spaces, hyphens etc
-            if(this.revealedIndices.has(i)) return c; // Revealed letter
+            if(!/[a-zA-Z]/.test(c)) return c; 
+            if(this.revealedIndices.has(i)) return c; 
             return '_';
         }).join(' ');
     }
 
-    // Reveal a random unrevealed letter (but never reveal more than word.length - 2)
     revealLetter(){
         if(!this.currentWord) return;
         const letters = [];
@@ -176,18 +170,14 @@ class Game{
             }
         }
         
-        // Count total letter positions
         const totalLetters = this.currentWord.split('').filter(c => /[a-zA-Z]/.test(c)).length;
         
-        // Never reveal more than totalLetters - 2
         if(this.revealedIndices.size >= totalLetters - 2) return;
-        if(letters.length <= 2) return; // Keep at least 2 hidden
+        if(letters.length <= 2) return; 
         
-        // Pick a random unrevealed letter
         const randomIndex = letters[Math.floor(Math.random() * letters.length)];
         this.revealedIndices.add(randomIndex);
         
-        // Broadcast updated hint
         const hint = this.buildHint();
         this.broadcastToRoom('game:hint_update', { wordHint: hint });
     }
@@ -196,8 +186,6 @@ class Game{
         if(this.roundTimer) clearInterval(this.roundTimer);
         let timeLeft = this.roundDuration;
         
-        // Calculate hint reveal intervals
-        // Reveal a letter at 66%, 50%, 33%, 20% of time remaining
         const hintTimes = [
             Math.floor(this.roundDuration * 0.66),
             Math.floor(this.roundDuration * 0.50),
@@ -210,7 +198,6 @@ class Game{
             if(this.state !== GAME_STATES.DRAWING) return;
             timeLeft--;
             
-            // Check if it's time to reveal a letter
             const elapsed = this.roundDuration - timeLeft;
             if(hintTimes.includes(elapsed)){
                 this.revealLetter();
