@@ -59,6 +59,10 @@ const Lobby = ({ players, roomId }) => {
                 ) : (
                     <p style={{ color: 'var(--text-muted)', fontWeight: 700, fontSize: '14px' }}>
                         Waiting for more players ({players.length}/2)...
+                        <br />
+                        <span style={{ fontWeight: 400, opacity: 0.8, fontSize: '12px' }}>
+                            (For testing: Open this page in incognito mode)
+                        </span>
                     </p>
                 )}
             </div>
